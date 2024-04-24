@@ -1,4 +1,3 @@
-
 *&---------------------------------------------------------------------*
  *& Report Z08_EXCEL_EXPORT_UPLOAD_01
  *&---------------------------------------------------------------------*
@@ -10,6 +9,26 @@ TABLES:sscrfields.
  
 DATA:gv_filename TYPE string.
  
+*Upload edeceğimiz dosya için parametre girdisi
+ SELECTION-SCREEN BEGIN OF BLOCK b11 WITH FRAME TITLE TEXT-t11.
+ PARAMETERS:p_file TYPE string.
+ SELECTION-SCREEN END OF BLOCK b11.
+ 
+*Bilgisayarda kaydedilecek yeri seçme
+ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
+   CALL METHOD cl_gui_frontend_services=>directory_browse
+     CHANGING
+       selected_folder      = p_file
+     EXCEPTIONS
+       cntl_error           = 1
+       error_no_gui         = 2
+       not_supported_by_gui = 3
+       OTHERS               = 4.
+   IF sy-subrc <> 0.
+ * Implement suitable error handling here
+   ENDIF.
+ 
+
 *Upload edilecek tablonun Type'ı hazırlanır
  TYPES:BEGIN OF gty_excel_upload,
          belge_no         TYPE numc10,
@@ -34,42 +53,22 @@ DATA:gt_excel_upload TYPE TABLE OF gty_excel_upload.
 DATA:gt_header TYPE TABLE OF gty_header,
       gs_header TYPE gty_header.
  
-*Upload edeceğimiz dosya için parametre girdisi
- SELECTION-SCREEN BEGIN OF BLOCK b11 WITH FRAME TITLE TEXT-t11.
- PARAMETERS:p_file TYPE string.
- SELECTION-SCREEN END OF BLOCK b11.
- 
 *Buton oluşturma
  
-SELECTION-SCREEN FUNCTION KEY 1.
- 
-DATA:d_butt1 TYPE char3.
+*SELECTION-SCREEN FUNCTION KEY 1.
+ *
+ *DATA:d_butt1 TYPE char3.
  
 *  *Butona Isım Atama
- INITIALIZATION .
-   MOVE 'Template Indır' TO sscrfields-functxt_01.
+ *INITIALIZATION .
+ *  MOVE 'Template Indır' TO sscrfields-functxt_01.
  
 
-
-*Bilgisayarda kaydedilecek yeri seçme
- AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
-   CALL METHOD cl_gui_frontend_services=>directory_browse
-     CHANGING
-       selected_folder      = p_file
-     EXCEPTIONS
-       cntl_error           = 1
-       error_no_gui         = 2
-       not_supported_by_gui = 3
-       OTHERS               = 4.
-   IF sy-subrc <> 0.
- * Implement suitable error handling here
-   ENDIF.
+*
  
-
 *Upload(Export) edilecek dosyayı Databanktan dahili tabloya çekme;
  
-  SELECT * FROM z08_excel_export INTO CORRESPONDING FIELDS OF TABLE gt_excel_upload.
- 
+
 *Seçilen dosyanın uzantısını Xls yapma
    CONCATENATE p_file
              '/'
@@ -99,11 +98,10 @@ DATA:d_butt1 TYPE char3.
    gs_header-line = 'Tahmini Teslimat Tarihi'.
    APPEND gs_header TO gt_header.
  
-  AT SELECTION-SCREEN.
+
+*  AT SELECTION-SCREEN.
  
 *Seçilen dosyayı bilgisayara kaydetme
- 
-  IF sy-ucomm = 'FC01'.
  
     CALL FUNCTION 'GUI_DOWNLOAD'
        EXPORTING
@@ -114,8 +112,12 @@ DATA:d_butt1 TYPE char3.
          data_tab              = gt_excel_upload                         "Dahili tablo
          fieldnames            = gt_header.
  
-  ENDIF.
+*Daha sonra Download için kullanılacak.
+ *  IF sy-ucomm = 'FC01'.
+ *  ENDIF.
  
+
+
   START-OF-SELECTION. 
 
 
