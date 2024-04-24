@@ -1,3 +1,4 @@
+
 *&---------------------------------------------------------------------*
  *& Report Z08_EXCEL_EXPORT_UPLOAD_01
  *&---------------------------------------------------------------------*
@@ -5,7 +6,9 @@
  *&---------------------------------------------------------------------*
  REPORT z08_excel_export_upload_01.
  
-*TABLES:pkw_rptattrib,mara,sscrfields,rlgrap.
+TABLES:sscrfields.
+ 
+DATA:gv_filename TYPE string.
  
 *Upload edilecek tablonun Type'ı hazırlanır
  TYPES:BEGIN OF gty_excel_upload,
@@ -20,6 +23,9 @@
          teslimat_tarih   TYPE datum,
        END OF gty_excel_upload.
  
+DATA:gt_excel_upload TYPE TABLE OF gty_excel_upload.
+ 
+
 *Kolon başlıkları içinde ayrıca Type tanımlanır
  TYPES :BEGIN OF gty_header,
           line TYPE char30,
@@ -28,15 +34,23 @@
 DATA:gt_header TYPE TABLE OF gty_header,
       gs_header TYPE gty_header.
  
-DATA:gv_filename TYPE string.
- 
-DATA:gt_excel_upload TYPE TABLE OF gty_excel_upload.
- 
-*Upload edeceğimiz dosya parametresi
+*Upload edeceğimiz dosya için parametre girdisi
  SELECTION-SCREEN BEGIN OF BLOCK b11 WITH FRAME TITLE TEXT-t11.
  PARAMETERS:p_file TYPE string.
  SELECTION-SCREEN END OF BLOCK b11.
  
+*Buton oluşturma
+ 
+SELECTION-SCREEN FUNCTION KEY 1.
+ 
+DATA:d_butt1 TYPE char3.
+ 
+*  *Butona Isım Atama
+ INITIALIZATION .
+   MOVE 'Template Indır' TO sscrfields-functxt_01.
+ 
+
+
 *Bilgisayarda kaydedilecek yeri seçme
  AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
    CALL METHOD cl_gui_frontend_services=>directory_browse
@@ -52,34 +66,6 @@ DATA:gt_excel_upload TYPE TABLE OF gty_excel_upload.
    ENDIF.
  
 
-*Buton oluşturma
-   SELECTION-SCREEN FUNCTION KEY 1.
- 
-  DATA:d_butt1 TYPE char3.
- 
-*Butona Isım Atama
- INITIALIZATION .
-   MOVE 'Template Indır' TO sscrfields-functxt_01.
- 
-AT SELECTION-SCREEN.
- 
-*Seçilen dosyayı bilgisayara kaydetme
- 
-  IF sy-ucomm = 'FC01'.
- 
-    CALL FUNCTION 'GUI_DOWNLOAD'
-       EXPORTING
-         filename              = gv_filename                      "Kaydedeceğimiz dosya için göstereceğimiz yol
-         filetype              = 'ASC'                             "Kaydetmek istediğimiz dosya tipi
-         write_field_separator = 'X'                               "Kolonları ayırmak için
-       TABLES
-         data_tab              = gt_excel_upload                         "Dahili tablo
-         fieldnames            = gt_header.
- 
-  ENDIF.
- 
-*START-OF-SELECTION.
- 
 *Upload(Export) edilecek dosyayı Databanktan dahili tabloya çekme;
  
   SELECT * FROM z08_excel_export INTO CORRESPONDING FIELDS OF TABLE gt_excel_upload.
@@ -111,4 +97,130 @@ AT SELECTION-SCREEN.
    gs_header-line = 'Talep Tarihi'.
    APPEND gs_header TO gt_header.
    gs_header-line = 'Tahmini Teslimat Tarihi'.
-   APPEND gs_header TO gt_header. 
+   APPEND gs_header TO gt_header.
+ 
+  AT SELECTION-SCREEN.
+ 
+*Seçilen dosyayı bilgisayara kaydetme
+ 
+  IF sy-ucomm = 'FC01'.
+ 
+    CALL FUNCTION 'GUI_DOWNLOAD'
+       EXPORTING
+         filename              = gv_filename                      "Kaydedeceğimiz dosya için göstereceğimiz yol
+         filetype              = 'ASC'                             "Kaydetmek istediğimiz dosya tipi
+         write_field_separator = 'X'                               "Kolonları ayırmak için
+       TABLES
+         data_tab              = gt_excel_upload                         "Dahili tablo
+         fieldnames            = gt_header.
+ 
+  ENDIF.
+ 
+  START-OF-SELECTION. 
+
+
+2. Örnek Scarr ;
+
+REPORT z08_excel_export_upload.
+ 
+TABLES:sscrfields.
+ 
+DATA:gv_filename TYPE string.
+
+*Upload edilecek tablonun Type'ı hazırlanır
+TYPES:BEGIN OF gty_scarr,
+         carrid   TYPE s_carr_id,
+         carrname TYPE s_carrname,
+         currcode TYPE s_currcode,
+         url      TYPE s_carrurl,
+       END OF gty_scarr.
+ 
+DATA:gt_scarr TYPE TABLE OF gty_scarr.
+
+*Kolon başlıkları içinde ayrıca Type tanımlanır
+
+TYPES :BEGIN OF gty_header,
+   line TYPE char30,
+   END OF gty_header.
+ 
+DATA:gt_header TYPE TABLE OF gty_header,
+      gs_header TYPE gty_header.
+
+
+*Upload edeceğimiz dosya için parametre girdisi
+
+SELECTION-SCREEN BEGIN OF BLOCK b11 WITH FRAME TITLE TEXT-t11.
+ PARAMETERS:p_file TYPE string.
+ SELECTION-SCREEN END OF BLOCK b11.
+
+
+*Buton oluşturma
+
+SELECTION-SCREEN FUNCTION KEY 1.
+ 
+  DATA:d_butt1 TYPE char3.
+ 
+*Butona Isım Atama
+ INITIALIZATION .
+   MOVE 'Template Indır' TO sscrfields-functxt_01.
+ 
+
+*Bilgisayarda kaydedilecek yeri seçme
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
+ CALL METHOD cl_gui_frontend_services=>directory_browse
+   CHANGING
+     selected_folder      = p_file
+   EXCEPTIONS
+     cntl_error           = 1
+     error_no_gui         = 2
+     not_supported_by_gui = 3
+     OTHERS               = 4
+         .
+ IF sy-subrc <> 0.
+ * Implement suitable error handling here
+ ENDIF.
+ 
+*Upload(Export) edilecek dosyayı Databanktan dahili tabloya çekme;
+ 
+SELECT * FROM scarr INTO CORRESPONDING FIELDS OF TABLE gt_scarr.
+ 
+*Seçilen dosyanın uzantısını Xls yapma
+
+  CONCATENATE p_file
+             '/'
+             sy-datum
+             '-'
+             sy-uzeit
+             '.xls'
+  INTO gv_filename.
+ 
+
+*Kolon başlıklarını atama;
+
+gs_header-line = 'Short Description'.
+ APPEND gs_header TO gt_header.
+ gs_header-line = 'Airlines'.
+ APPEND gs_header TO gt_header.
+ gs_header-line = 'Currency'.
+ APPEND gs_header TO gt_header.
+ gs_header-line = 'URL'.
+ APPEND gs_header TO gt_header.
+ 
+
+*Seçilen dosyayı bilgisayara kaydetme
+AT SELECTION-SCREEN.
+   IF sy-ucomm = 'FC01'.
+ 
+    CALL FUNCTION 'GUI_DOWNLOAD'
+       EXPORTING
+         filename              = gv_filename                      "Kaydedeceğimiz dosya için göstereceğimiz yol
+         filetype              = 'ASC'                             "Kaydetmek istediğimiz dosya tipi
+         write_field_separator = 'X'                               "Kolonları ayırmak için
+       TABLES
+         data_tab              = gt_scarr                         "Dahili tablo
+         fieldnames            = gt_header.
+ 
+  ENDIF. 
+
+
+
