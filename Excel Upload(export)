@@ -1,3 +1,10 @@
+Adım 2 – 24.04.2024
+‘Template indir’ butonuna basıldığında, paylaşılmış olan Excel dosyalarındaki gibi, sadece kolon isimlerinin olduğu bir template Excel dosyasını çalışılan bilgisayara indirecektir. Dosya ister masaüstüne direk indirilecek ister kullanıcıya bilgisayardaki 
+hangi uzantıya indirmesi gerektiği sorulacak ve verilen cevaba göre indirme işlemi yapılacaktır.
+
+(Ben yanlış anladım,butonu aktifb hale getirmedim.Dosya/excel export)
+
+
 *&---------------------------------------------------------------------*
  *& Report Z08_EXCEL_EXPORT_UPLOAD_01
  *&---------------------------------------------------------------------*
