@@ -1,0 +1,143 @@
+*&---------------------------------------------------------------------*
+ *& Report Z08_EXCEL_IMPORT
+ *&---------------------------------------------------------------------*
+ *&
+ *&---------------------------------------------------------------------*
+ REPORT z08_excel_import.
+ 
+TABLES:z08_excel_export.
+ 
+DATA: go_alv  TYPE REF TO cl_gui_alv_grid,
+       go_cont TYPE REF TO cl_gui_custom_container.
+ 
+
+TYPES:BEGIN OF gty_exp.
+         INCLUDE TYPE z08_excel_export.
+         TYPES:ampel TYPE c LENGTH 1,
+         hata TYPE char1,
+       END OF gty_exp.
+ 
+DATA: gt_exp      TYPE TABLE OF gty_exp, "z08_excel_export,
+       gt_fcat     TYPE lvc_t_fcat,
+       gs_fieldcat TYPE lvc_s_fcat,
+       gs_layout   TYPE lvc_s_layo.
+ 
+
+MODULE status_0100 OUTPUT.
+   SET PF-STATUS '0100'.
+   SET TITLEBAR '0100'.
+   PERFORM display_alv.           "Screende çalıştığı için displayi paide yazarız.
+ ENDMODULE.
+ 
+
+*----------------------------------------------------------------------*
+ MODULE user_command_0100 INPUT.
+   CASE sy-ucomm.
+     WHEN '&BACK'.
+       SET SCREEN 0.
+   ENDCASE.
+ 
+ENDMODULE.
+ 
+
+
+
+
+
+*2
+ TYPES: BEGIN OF gty_itab,
+          kolon1 TYPE char20,
+          kolon2 TYPE char20,
+          kolon3 TYPE char20,
+          kolon4 TYPE char20,
+          kolon5 TYPE char20,
+          kolon6 TYPE char20,
+          kolon7 TYPE char20,
+          kolon8 TYPE char20,
+          kolon9 TYPE char20,
+ 
+       END OF gty_itab.
+ 
+DATA:gt_itab         TYPE TABLE OF gty_itab,
+      gt_tab_raw_data TYPE truxs_t_text_data.
+ 
+*4-
+ PARAMETERS:p_file TYPE rlgrap-filename.
+ 
+*5-
+ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_file.
+   CALL FUNCTION 'F4_FILENAME'
+     EXPORTING
+ *     PROGRAM_NAME        = SYST-CPROG
+ *     DYNPRO_NUMBER       = SYST-DYNNR
+       field_name = ' p_file'
+     IMPORTING
+       file_name  = p_file.
+ 
+
+
+
+*1-
+   CALL FUNCTION 'TEXT_CONVERT_XLS_TO_SAP'
+     EXPORTING
+ *     I_FIELD_SEPERATOR    =
+       i_line_header        = 'X'            "Bunu x yazarsak ilk satırı almıyor,muhtemelen başlıkların olduğu satır.
+       i_tab_raw_data       = gt_tab_raw_data
+       i_filename           = p_file
+     TABLES
+       i_tab_converted_data = gt_itab    "Oluşturduğumuz dahili tablo buraya yazılır
+ * EXCEPTIONS
+ *     CONVERSION_FAILED    = 1
+ *     OTHERS               = 2
+     .
+   IF sy-subrc <> 0.
+ * Implement suitable error handling here
+   ENDIF.
+ 
+START-OF-SELECTION.
+ 
+*  INSERT z08_excel_export FROM TABLE gt_itab.
+ 
+  PERFORM get_data.
+ 
+
+
+  CALL SCREEN 100.
+ 
+FORM display_alv.
+ 
+*    Screende belli bir alanda Container olarak ALV'yi basmak için
+   CREATE OBJECT go_cont
+     EXPORTING
+       container_name = 'CC_ALV'.
+ 
+  CREATE OBJECT go_alv
+     EXPORTING
+       i_parent = go_cont.
+ 
+
+ gs_layout-excp_fname = 'AMPEL'.             "3 lü lamba görünümü
+ 
+
+  CALL METHOD go_alv->set_table_for_first_display
+     EXPORTING
+       i_structure_name = 'Z08_EXCEL_EXPORT'
+       is_layout        = gs_layout
+     CHANGING
+       it_outtab        = gt_exp
+       it_fieldcatalog  = gt_fcat.
+ ENDFORM.
+ 
+*&---------------------------------------------------------------------*
+ FORM get_data .
+   SELECT * FROM z08_excel_export INTO CORRESPONDING FIELDS OF TABLE  gt_exp.
+ 
+    LOOP AT gt_exp INTO data(gs_exp) .
+ 
+      gs_exp-ampel = '2'.
+ 
+       MODIFY  gt_exp FROM gs_exp TRANSPORTING ampel.
+ 
+     ENDLOOP.
+ 
+ENDFORM. 
