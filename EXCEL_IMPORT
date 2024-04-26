@@ -1,3 +1,10 @@
+Adım 3 – 25.04.2024
+‘Template indir’ butonu ile indirilmiş Excel dosyası 3 4 satır olacak şekilde doldurulacak. Verileri rastgele olacak şekilde doldurabiliriz şimdilik ve bilgisayara kaydedilecek. Daha sonra SAP üzerinde yazmış olduğumuz programda
+seçim ekranından bu dosya seçilerek program çalıştırılacak. Excel upload yapılarak içeride girmiş olduğumuz veriler paylaşmış olduğum teknik adlardan oluşan internal table’a aktarılacak. Tarih, Miktar ve Birim alanlarının dönüşümlerine dikkat edilmesi önemli nokta.
+
+(Hocada export import tek sayfada, ben ayrı yaptım henüz birleştirmedim.
+
+
 REPORT Z08_EXCEL_IMPORT.
  
 *2
