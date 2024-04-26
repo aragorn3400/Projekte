@@ -1,3 +1,7 @@
+Adım 4 – 26.04.2024
+Internal Table’a alınmış olan veriler, tercihe göre, fonksiyonel ALV veya class ALV yapısı ile ekrana açılacaktır. ALV liste yapısında ilk alan Traffic Light şeklinde olacak ve Sarı renk yanıyor olacaktır, en son alan ise hata mesajlarını göstereceğimiz bir char
+alanı olacaktır.
+(Ben import ettiğim data üstünden gittim)
 *&---------------------------------------------------------------------*
  *& Report Z08_EXCEL_IMPORT
  *&---------------------------------------------------------------------*
